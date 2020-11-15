@@ -1,7 +1,7 @@
-function [RXY, tShift, indShift, RXX, RYY ] = egmcorr(eX,eY,sampleFreq, tWindowWidth, tMaxLag)
+function [R, tShift] = egmcorr_centred(e1,e2,sampleFreq, tWindowWidth, tMaxLag)
 % EGMCROSSCORRELATE 
 % Make sure to choose tWindowWidth to minimise mains pickup
-% Author: Nick Linton (2020)
+% Author: Nick Linton (2014)
 % Modifications - 
 
 
@@ -57,77 +57,66 @@ function [RXY, tShift, indShift, RXX, RYY ] = egmcorr(eX,eY,sampleFreq, tWindowW
 % code
 % ---------------------------------------------------------------
     
-    % make column vectors (data access faster in columns of matrices)
-    eX = eX(:); eY = eY(:);
-    
     % create window
     nW = tWindowWidth*sampleFreq;
     nHalfW = floor(nW/2);
     nW = 2*nHalfW+1;
     w = kaiser(nW,2);
-    % normalise
-    w = w/sum(w);
     
-    maxDelta = ceil(tMaxLag * sampleFreq);
-    indShift = -maxDelta:maxDelta;
-    indShiftZero = 1+maxDelta;
+    maxDelta = ceil(tMaxLag * sampleFreq / 2);
+    delta = -maxDelta:maxDelta;
         
-    k = nHalfW+indShift(end);
-
-    
-    
+    k = nHalfW+delta(end);
 % *************************************************************************
 % This is the simple version of the code, which is slow
 %**************************************************************************
-%     R = NaN(numel(eX),numel(delta));
-%     for t = (k+1):(numel(eX)-k);
-%             eXw = eX((t-nHalfW):(t+nHalfW)) .* w;
+%     R = NaN(numel(e1),numel(delta));
+%     for t = (k+1):(numel(e1)-k);
 %         for j = 1:numel(delta);
 %             d = delta(j);
-%             eYw = eY((t-nHalfW+d):(t+nHalfW+d)) .* w; %this will be calculated multiple times for various t/j
-%             R(t,j) = eXw'*eYw;
+%             e1w = e1((t-nHalfW-d):(t+nHalfW-d)) .* w; %this will be calculated multiple times for various t/j
+%             e2w = e2((t-nHalfW+d):(t+nHalfW+d)) .* w;
+%             R(t,j) = e1w'*e2w;
 %         end
 %     end
     
-
-
-
 % *************************************************************************
 % This is the more complicated version of the code, which is faster.
-% For each value of t above, we need eYw centred on t-d to t+d, ie t+delta(:)
+% For each value of t above, we need e1w and e2w centred on t-d to t+d or,
+% more formally, t+delta(:)
 %**************************************************************************
-% eYwB is going to be an n*numel(w) array - eY 'windowed' and buffered
-    nBuff = numel(indShift);
-    eYwB = zeros(numel(w), nBuff); %B for buffer
+% e1w is going to be an n*numel(w) array - it is e1 'windowed'
+    nBuff = numel(delta);
+    e1w = zeros(nBuff, numel(w));
+    e2w = zeros(nBuff, numel(w));
     tFirst = k + 1;
     
     for i = (tFirst-maxDelta):(tFirst+maxDelta)
         index = 1 + mod(i,nBuff);
-        eYwB(:,index) = eY((i-nHalfW):(i+nHalfW)) .* w;
+        e1w(index,:) = e1((i-nHalfW):(i+nHalfW)) .* w;
+        e2w(index,:) = e2((i-nHalfW):(i+nHalfW)) .* w;
     end
     
-    RXY = zeros(numel(eX),numel(indShift));
-    RXX = zeros(numel(eX),1);
-    RYY = zeros(numel(eX),1);
-    for t = tFirst:(numel(eX)-k)
-        % add next eXw and eYw to buffer
+    R = zeros(numel(e1),numel(delta));
+    for t = tFirst:(numel(e1)-k)
+        % add next e1w and e2w to buffer
         tNewBuff = t+maxDelta;
-        index1 = 1+mod(tNewBuff,nBuff); %mymod(tNewBuff,nBuff);
-        eYwB(:,index1) = eY((tNewBuff-nHalfW):(tNewBuff+nHalfW)) .* w;
+        index = 1+mod(tNewBuff,nBuff); %mymod(tNewBuff,nBuff);
+        e1w(index,:) = e1((tNewBuff-nHalfW):(tNewBuff+nHalfW)) .* w;
+        e2w(index,:) = e2((tNewBuff-nHalfW):(tNewBuff+nHalfW)) .* w;
         
-        eXw = eX((t-nHalfW):(t+nHalfW)) .* w;
-        index2 = 1 + mod(t+indShift,nBuff); % i.e. eYw(t+delta,:)
-        eYw_shifted = eYwB(:,index2);
-        
-        
-        RXY(t,1:numel(indShift)) = (eXw'*eYw_shifted);
-        RXX(t) = (eXw'*eXw);
-        
-        index3 =  1 + mod(t,nBuff); % i.e. eYw(t+delta,:)
-        eYw = eYwB(:,index3);
-        RYY(t) = (eYw'*eYw);
+        index1 = 1 + mod(t-delta,nBuff);
+        index2 = 1 + mod(t+delta,nBuff);
+        R(t,1:numel(delta)) = sum(e1w(index1,:).*e2w(index2,:),2)';
     end
 %**************************************************************************
 
-    tShift = indShift * 2/sampleFreq;
+    tShift = delta * 2/sampleFreq;
 end
+       
+function c = mymod(a,b)
+    c = 1+mod(a,b);
+end
+            
+            
+            
