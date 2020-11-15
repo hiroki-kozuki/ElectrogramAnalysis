@@ -38,12 +38,12 @@ function [shift, shiftAlt, SCORE] = generatewarpshift(RXY, RXX, RYY)
 % code
 % ---------------------------------------------------------------
 
-    debug = true;
-    debug = false;
+        debug = true;
+        %debug = false;
+        if debug; hPScore = []; end
 
-    noiseLevel = 10^(-5);
-    RXX(RXX<noiseLevel) = NaN;
-    RYY(RYY<noiseLevel) = NaN;
+    noiseLevel = 1.5*10^(-5);
+
 
     SCORE = RXY;
     [nRows, nCols] = size(SCORE);
@@ -61,29 +61,43 @@ function [shift, shiftAlt, SCORE] = generatewarpshift(RXY, RXX, RYY)
     % *************************************************************************
     % set the SCORE to NaN for 
     %   i) the start and end of the matrix
-    %   ii) RXX below noise
-    %   iii) RYY below noise
-
+    %   ii) RYY below noise
+    %   iii) RXX below noise
+    %   iv) RXY below noise
+    
+    RXX(RXX<noiseLevel) = NaN;
+    RYY(RYY<noiseLevel) = NaN;
+    RXY(RXY<noiseLevel) = NaN;
+    
+    
     % i)
     SCORE(1:nCols,:) = NaN;
     SCORE((end-nCols-1):end,:) = NaN;
 
-    % ii)
-    iXbad = RXX<noiseLevel;
-    SCORE(iXbad,:) = NaN;
-
-    %iii)
-    iYbad = RYY<noiseLevel;
-    SCORE(iXbad,cMid) = NaN;
+    %ii)
+    iYbad = isnan(RYY);
+    SCORE(iYbad,cMid) = NaN;
     iYbad_lead = iYbad;     iYbad_lag = iYbad;
-    display('need to dbug this loop')
+    
     for i = 1:(cMid-1)
+                            if debug; nested_debug0(); end
         iYbad_lead = [iYbad_lead(2:end)    ; false];
-        SCORE(iYbad,cMid-i) = NaN;
+        SCORE(iYbad_lead,cMid+i) = NaN;
 
         iYbad_lag  = [false; iYbad_lag(1:(end-1))];
-        SCORE(iYbad,cMid+i) = NaN;
+        SCORE(iYbad_lag,cMid-i) = NaN;
     end
+    
+    % iii)
+    iXbad = isnan(RXX);
+    SCORE(iXbad,:) = NaN;
+        if debug; nested_debug0(); end
+  
+    % iv)
+    iXYbad = isnan(RXY);
+    SCORE(iXYbad) = NaN;
+        if debug; nested_debug0(); end
+    
     % *************************************************************************
 
 
@@ -175,6 +189,21 @@ function [shift, shiftAlt, SCORE] = generatewarpshift(RXY, RXX, RYY)
 %**************************************************************************
 % nested functions for debugging and visualisation
 %**************************************************************************
+    
+    function nested_debug0()
+        if isempty(hPScore)
+            figure;
+        else
+            delete(hPScore)
+        end
+            hPScore = pcolor(SCORE');
+        set(hPScore, 'EdgeColor','none')
+        set(gca, 'YDir','reverse')
+        pause
+    end
+    
+    
+    
     function nested_debug1()
         figure
         hold on
@@ -194,6 +223,7 @@ function [shift, shiftAlt, SCORE] = generatewarpshift(RXY, RXX, RYY)
         %set(gca,'Ylim', xlim)
     end
     function nested_debug2()
+        persistent hPeaks hShift
         try; delete(hPeaks);delete(hShift); end %#ok<NOSEMI,TRYNC>
         hPeaks = plot(peakRow,peakCol,'*r','MarkerSize',5);
         hShift = plot(1:nRows,shiftAlt,'r');
