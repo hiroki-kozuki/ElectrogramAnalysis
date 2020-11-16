@@ -1,4 +1,4 @@
-close all
+%close all
 clear all
 if false
     load('testData.mat')
@@ -7,15 +7,26 @@ else
 end
 
 ind = 1:1300;
-e1 = e1(ind); e2 = e2(ind); e3 = e3(ind);
+%e1 = e1(ind); e2 = e2(ind); e3 = e3(ind);
 
 tWindowWidth = 30/1000;
 tMaxLag = 20/1000;
 sampleFreq = 2034.5;
+noiseLevel = 1.5*10^(-5);
+f = 1;
+
+x = [0,0;0,1;1,1];
+t = [1,2,3];
+t = triangulation(t,x);
+e = t.edges;
+
 
 
 [RXY, tShift, indShift, RXX, RYY ] = egmcorr(e1,e2,sampleFreq, tWindowWidth, tMaxLag);
-[shift, shiftAlt, SCORE] = generatewarpshift(RXY, RXX, RYY);
+[shift, shiftAlt, SCORE] = generatewarpshift(RXY, RXX, RYY, noiseLevel);
+shiftNew = finessewarpshift(shift);
+eInterp = interpegm(e1, e2, shiftNew, [0:.1:1]);
+
 
 
 
@@ -49,9 +60,13 @@ set(gca,'Xlim', [ind(1) ind(end)])
         %set(gca,'Ylim', xlim)
 
 figure
-plot(e1)
+plot(eInterp,'g','LineWidth',1)
 hold on
-plot(e2)
+plot(e1,'b','LineWidth',3 )
+plot(e2,'r','LineWidth',3 )
+
+plot(shiftNew / 100, 'c', 'LineWidth',3)
 plot(shift / 100, 'k', 'LineWidth',3)
+
 
 

@@ -1,4 +1,4 @@
-function [shift, shiftAlt, SCORE] = generatewarpshift(RXY, RXX, RYY)
+function [shift, shiftAlt, SCORE] = generatewarpshift(RXY, RXX, RYY, noiseLevel)
 % GENERATEWARP We will create and then modify a SCORE matrix (as opposed to
 % COST, we are trying to maximse a score not minimise cost) which consists
 % of ... SCORE(index,indshift) where index is the time index into the
@@ -39,10 +39,10 @@ function [shift, shiftAlt, SCORE] = generatewarpshift(RXY, RXX, RYY)
 % ---------------------------------------------------------------
 
         debug = true;
-        %debug = false;
+        debug = false;
         if debug; hPScore = []; end
 
-    noiseLevel = 1.5*10^(-5);
+    % noiseLevel = 1.5*10^(-5);
 
 
     SCORE = RXY;
@@ -124,7 +124,7 @@ function [shift, shiftAlt, SCORE] = generatewarpshift(RXY, RXX, RYY)
     
     if debug; nested_debug2(); end
 
-    while (~isempty(peakVal))
+    while (~isempty(peakVal) && ~isnan(peakVal(1)))
         %take the largest peak that is still in the running
         r = peakRow(1);
         c = peakCol(1);
