@@ -112,6 +112,9 @@ function [RXY, tShift, indShift, RXX, RYY ] = egmcorr(eX,eY,sampleFreq, tWindowW
 % eYw_shifted accesses the buffered segments of eY at various shifts (from t - tMaxLag to t + tMaxLag).
 % The cross-correlation, RXY, between the current windowed segment of eX and each shifted windowed segment of eY is computed and stored.
 
+% RXX and RYY store the autocorrelation of eX and eY within each window for normalization purposes. 
+% This is essential for calculating normalized cross-correlation if required.
+
     RXY = zeros(numel(eX),numel(indShift));
     RXX = zeros(numel(eX),1);
     RYY = zeros(numel(eX),1);
@@ -134,6 +137,6 @@ function [RXY, tShift, indShift, RXX, RYY ] = egmcorr(eX,eY,sampleFreq, tWindowW
         RYY(t) = (eYw'*eYw);
     end
 %**************************************************************************
-
+% tShift converts the sample shift indices indShift into actual time values using sampleFreq, making the lag interpretation in seconds.
     tShift = indShift * 2/sampleFreq;
 end
