@@ -2,6 +2,7 @@ function [R, tShift] = egmcorr_centred(e1,e2,sampleFreq, tWindowWidth, tMaxLag)
 % EGMCROSSCORRELATE 
 % Make sure to choose tWindowWidth to minimise mains pickup
 % Author: Nick Linton (2014)
+% Added comments by Hiroki (2024)
 % Modifications - 
 
 
