@@ -2,6 +2,7 @@ function [RXY, tShift, indShift, RXX, RYY ] = egmcorr(eX,eY,sampleFreq, tWindowW
 % EGMCROSSCORRELATE 
 % Make sure to choose tWindowWidth to minimise mains pickup
 % Author: Nick Linton (2020)
+% Added comments by Hiroki (2024)
 % Modifications - 
 
 
