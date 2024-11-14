@@ -61,18 +61,18 @@ function [RXY, tShift, indShift, RXX, RYY ] = egmcorr(eX,eY,sampleFreq, tWindowW
     eX = eX(:); eY = eY(:);
     
     % create window
-    nW = tWindowWidth*sampleFreq;
+    nW = tWindowWidth*sampleFreq; % Window length counted in terms of number of sample indices. 
     nHalfW = floor(nW/2);
     nW = 2*nHalfW+1;
-    w = kaiser(nW,2);
+    w = kaiser(nW,2); % Apply a Kaiser window (beta = 2) to smooth the edges of the time window. This helps reduce artifacts from sharp transitions at window boundaries.
     % normalise
     w = w/sum(w);
     
-    maxDelta = ceil(tMaxLag * sampleFreq);
-    indShift = -maxDelta:maxDelta;
-    indShiftZero = 1+maxDelta;
+    maxDelta = ceil(tMaxLag * sampleFreq); % Maximum lag counted in terms of number of samples. 
+    indShift = -maxDelta:maxDelta; % List of all possible shifts in sample indices based on tMaxLag.
+    indShiftZero = 1+maxDelta; 
         
-    k = nHalfW+indShift(end);
+    k = nHalfW+indShift(end); 
 
     
     
