@@ -12,6 +12,7 @@ function eInterp = interpegm(pNew, tri, egm, sampleFreq, noiseLevel)
 %   eInterp  - output
 %
 % Author: Nick Linton (2020)
+% Added comments by Hiroki (2024)
 % Modifications - 
 
 
@@ -36,8 +37,10 @@ function eInterp = interpegm(pNew, tri, egm, sampleFreq, noiseLevel)
     triEdges = tri.edges;
     nEdges = size(triEdges,1);
     
-    shift = zeros(size(egm,1),nEdges);
-    
+    shift = zeros(size(egm,1),nEdges); % Initialise shift array
+
+    % For each edge in the triangular mesh, time shifts between the corresponding electrograms are calculated using the egmtimewarp function. 
+    % The shift array is filled with these time shifts which align EGM signals on each edge pair.
     for iEdge = 1:nEdges
         eX = egm(:,triEdges(iEdge,1));
         eY = egm(:,triEdges(iEdge,2));
@@ -48,17 +51,22 @@ function eInterp = interpegm(pNew, tri, egm, sampleFreq, noiseLevel)
     % now for each triangle, get the barycentric coordinates of the points
     % inside it
     
-    [iTriangle,bary] = pointLocation(tri,pNew);
-    eInterp = zeros(size(egm,1),size(pNew,1));
+    [iTriangle,bary] = pointLocation(tri,pNew); %  Returns the IDs of the triangles enclosing the query points in pNew. Each row in the matrix pNew contains the coordinates of a query point.
+    eInterp = zeros(size(egm,1),size(pNew,1)); % Initialise eInterp array
+
+    % For each triangle, identify points that fall within it.
+    % Retrieve corresponding barycentric coordinates tbary.
+    % Determine the edges of the triangle and their respective indices in the triEdges list.
+    % Call the local_interp function to interpolate the electrogram data within the triangle based on the time-warped EGMs from the triangle vertices.
     
-    for iT = 1:size(tri,1)
+    for iT = 1:size(tri,1) % for each triangle
         ind = iTriangle==iT;
         
         tBary = bary(ind,:);
         
-        tPoints = tri.ConnectivityList(iT,:);
-        tEdges = [tPoints(1) tPoints(2); tPoints(1) tPoints(3); tPoints(2) tPoints(3)];
-        tEdges = sort(tEdges,2);
+        tPoints = tri.ConnectivityList(iT,:); % Each element in tri.ConnectivityList is a vertex ID of a triangle corresponding to iT.
+        tEdges = [tPoints(1) tPoints(2); tPoints(1) tPoints(3); tPoints(2) tPoints(3)]; % Each row corresponds to one edge of the triangle given by two vertex IDs.
+        tEdges = sort(tEdges,2); % Sort vertex IDs for each edge.
         
         iEdges = nan(3,1);
         for i = 1:3
@@ -79,6 +87,7 @@ end
 
 
 function eInterp = local_interp(lambda, egm, points, edges, shifts)
+    % Performs signal interpolation within a triangle given barycentric coordinates, EGM signals, triangle vertices, edges, and time shifts.
     %first we need to check each edge to see if it maps p1 to p2 etc.
     nE = size(egm,1);
     
@@ -100,7 +109,8 @@ function eInterp = local_interp(lambda, egm, points, edges, shifts)
     edge12 = [points(1), points(2)];
     edge13 = [points(1), points(3)];
     edge23 = [points(2), points(3)];
-    
+
+    % Assign time shifts between the triangle's vertices based on edges and points.
     for j = 1:2
         for i = 1:3
             if isequal(edge12,edges(i,:))
@@ -128,6 +138,10 @@ function eInterp = local_interp(lambda, egm, points, edges, shifts)
     
     % code proper ********************************************************
     % now we need to interpolate the warps as well as the magnitudes.
+    % The interpolation of each vertex's signal onto the target point is adjusted by the calculated shifts. 
+    % For each vertex:
+	% Time-warped indices (ind1, ind2, ind3) are computed using barycentric weights (lambda1, lambda2, lambda3) and the shifts.
+	% These warped indices determine the appropriate sample points from each EGM (warped by shift values) to obtain e1onLambda, e2onLambda, and e3onLambda.
     nE = size(egm,1);
     ind = repmat((1:nE)',1,numel(lambda1));
     
@@ -145,6 +159,7 @@ function eInterp = local_interp(lambda, egm, points, edges, shifts)
     e3onLambda = e3(ind3);
     
     % now interpolate the magnitudes
+    % The interpolated electrogram is calculated as a weighted sum of the time-warped signals from each vertex, using barycentric weights.
     eInterp = bsxfun(@times,e1onLambda,lambda1) ...
             + bsxfun(@times,e2onLambda,lambda2) ...
             + bsxfun(@times,e3onLambda,lambda3);
@@ -152,6 +167,7 @@ function eInterp = local_interp(lambda, egm, points, edges, shifts)
 end
 
 function i = local_clean(i,nE)
+% Ensure indices are rounded and constrained within the index bounds of EGM samples to avoid indexing errors.
     i = round(i);
     i(i<1)=1;
     i(i>nE)=nE;
