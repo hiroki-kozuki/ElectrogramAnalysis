@@ -24,6 +24,7 @@ function [shift, shiftAlt, SCORE] = generatewarpshift(RXY, RXX, RYY, noiseLevel)
 %
 %
 % Author: Nick Linton (2020)
+% Added comments by Hiroki (2024)
 % Modifications - 
 
 
