@@ -10,8 +10,8 @@ This MATLAB code calculates the cross-correlation between two intracardiac elect
 **tMaxLag** : Maximum shift (lag) of eY w.r.t eX \[s\] for computing cross-correlation. \
 
 **Outputs**: \
-**RXY** : Cross-correlation values between eX and eY across time and shifts.
-**tShift** : Time shifts for cross-correlation (calculated from indShift).
-**indShift** : Index shifts corresponding to the cross-correlation lag values.
-**RXX** : Autocorrelation values of eX within each window.
-**RYY** : Autocorrelation values of eY within each window.
+**RXY** : Cross-correlation values between eX and eY across time and shifts.\
+**tShift** : Time shifts for cross-correlation (calculated from indShift).\
+**indShift** : Index shifts corresponding to the cross-correlation lag values.\
+**RXX** : Autocorrelation values of eX within each window.\
+**RYY** : Autocorrelation values of eY within each window.\
