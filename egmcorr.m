@@ -106,7 +106,12 @@ function [RXY, tShift, indShift, RXX, RYY ] = egmcorr(eX,eY,sampleFreq, tWindowW
         index = 1 + mod(i,nBuff);
         eYwB(:,index) = eY((i-nHalfW):(i+nHalfW)) .* w;
     end
-    
+
+% For each time point t in eX, a windowed segment eXw of eX is created using the Kaiser window.
+% eYwB is updated with the next shifted segment of eY, which is stored at the appropriate index in the buffer.
+% eYw_shifted accesses the buffered segments of eY at various shifts (from t - tMaxLag to t + tMaxLag).
+% The cross-correlation, RXY, between the current windowed segment of eX and each shifted windowed segment of eY is computed and stored.
+
     RXY = zeros(numel(eX),numel(indShift));
     RXX = zeros(numel(eX),1);
     RYY = zeros(numel(eX),1);
