@@ -58,13 +58,13 @@ function [R, tShift] = egmcorr_centred(e1,e2,sampleFreq, tWindowWidth, tMaxLag)
 % ---------------------------------------------------------------
     
     % create window
-    nW = tWindowWidth*sampleFreq;
+    nW = tWindowWidth*sampleFreq; % Window length counted in terms of number of sample indices. 
     nHalfW = floor(nW/2);
     nW = 2*nHalfW+1;
-    w = kaiser(nW,2);
+    w = kaiser(nW,2); % Apply a Kaiser window (beta = 2) to smooth the edges of the time window. This helps reduce artifacts from sharp transitions at window boundaries.
     
-    maxDelta = ceil(tMaxLag * sampleFreq / 2);
-    delta = -maxDelta:maxDelta;
+    maxDelta = ceil(tMaxLag * sampleFreq / 2); % Unline egmcorr.m, maxDelta is defined as ceil(tMaxLag * sampleFreq / 2) instead of ceil(tMaxLag * sampleFreq). This difference effectively centers the lag range around zero more tightly, which could help if minimal shift detection is required.
+    delta = -maxDelta:maxDelta; % List of all possible shifts in sample indices based on tMaxLag.
         
     k = nHalfW+delta(end);
 % *************************************************************************
@@ -86,6 +86,7 @@ function [R, tShift] = egmcorr_centred(e1,e2,sampleFreq, tWindowWidth, tMaxLag)
 % more formally, t+delta(:)
 %**************************************************************************
 % e1w is going to be an n*numel(w) array - it is e1 'windowed'
+% e1w and e2w are created as matrices where each row corresponds to a buffered, windowed segment of e1 and e2, respectively.
     nBuff = numel(delta);
     e1w = zeros(nBuff, numel(w));
     e2w = zeros(nBuff, numel(w));
@@ -96,6 +97,11 @@ function [R, tShift] = egmcorr_centred(e1,e2,sampleFreq, tWindowWidth, tMaxLag)
         e1w(index,:) = e1((i-nHalfW):(i+nHalfW)) .* w;
         e2w(index,:) = e2((i-nHalfW):(i+nHalfW)) .* w;
     end
+
+% In the main loop, the function iterates over each time point in e1 and performs the following steps:
+% Buffering: Adds the current windowed segments of e1 and e2 to the buffers e1w and e2w for cross-correlation calculations.
+% Centered Windowing: Here, the code shifts e1w and e2w centered around the current time point, offset by delta. This is done using index1 = 1 + mod(t - delta, nBuff); and index2 = 1 + mod(t + delta, nBuff);.
+% Cross-Correlation Calculation: R(t, :) = sum(e1w(index1, :) .* e2w(index2, :), 2)'; calculates the cross-correlation by summing element-wise products of windowed segments of e1 and e2 at various shifts.
     
     R = zeros(numel(e1),numel(delta));
     for t = tFirst:(numel(e1)-k)
@@ -110,7 +116,7 @@ function [R, tShift] = egmcorr_centred(e1,e2,sampleFreq, tWindowWidth, tMaxLag)
         R(t,1:numel(delta)) = sum(e1w(index1,:).*e2w(index2,:),2)';
     end
 %**************************************************************************
-
+% tShift converts the sample shift indices indShift into actual time values using sampleFreq, making the lag interpretation in seconds.
     tShift = delta * 2/sampleFreq;
 end
        
