@@ -45,10 +45,10 @@ function [shift, shiftAlt, SCORE] = generatewarpshift(RXY, RXX, RYY, noiseLevel)
     % noiseLevel = 1.5*10^(-5);
 
 
-    SCORE = RXY;
+    SCORE = RXY; % Initialise SCORE as a copy of RXY representing the alignment quality for each time index and shift.
     [nRows, nCols] = size(SCORE);
-    cMid = (nCols+1)/2;
-    indShift = (1:nCols) - cMid;
+    cMid = (nCols+1)/2; 
+    indShift = (1:nCols) - cMid; % Array of possible shifts (column indices) in the cross-correlation matrix, with the center shift (cMid) representing zero lag.
 
     % now in this matrix,   indX-> (rX,cX) <=> rX=indX,     rC = all;
     %                       indY-> (rY,cY) <=> rY=indY-n    rC = cMid-n
@@ -60,9 +60,9 @@ function [shift, shiftAlt, SCORE] = generatewarpshift(RXY, RXX, RYY, noiseLevel)
 
     % *************************************************************************
     % set the SCORE to NaN for 
-    %   i) the start and end of the matrix
-    %   ii) RYY below noise
-    %   iii) RXX below noise
+    %   i) the start and end of the matrix (to avoid edge effects)
+    %   ii) RYY below noise (corresponding to regions with weak signals)
+    %   iii) RXX below noise (corresponding to regions with weak signals)
     %   iv) RXY below noise
     
     RXX(RXX<noiseLevel) = NaN;
@@ -99,32 +99,39 @@ function [shift, shiftAlt, SCORE] = generatewarpshift(RXY, RXX, RYY, noiseLevel)
         if debug; nested_debug0(); end
     
     % *************************************************************************
-
-
+    % Peak Identification and Scoring:
+    % Finding Peaks: After filtering for noise, SCORE is processed to identify local maxima using imregionalmax, which flags points that represent the best potential shifts for alignment.
+    % Peaks are sorted by score value in descending order, allowing the function to prioritize higher-confidence shifts for alignment.
+    
     if debug; nested_debug1(); end
 
     % find all of the peaks in SCORE
     temp = SCORE;
     temp(isnan(temp)) = 0;
-    BW = imregionalmax(temp,4);
-    [peakRow, peakCol] = find(BW);
-    peakVal = SCORE(sub2ind(size(SCORE),peakRow,peakCol));
+    BW = imregionalmax(temp,4); % imregionalmax returns the binary image BW that identifies the regional maxima in grayscale image I. 4 specifies the pixel connectivity.
+    [peakRow, peakCol] = find(BW); % find returns a vector containing the linear indices of each nonzero element in array BW.
+    peakVal = SCORE(sub2ind(size(SCORE),peakRow,peakCol)); % ind = sub2ind(sz,row,col) returns the linear indices ind corresponding to the row and column subscripts in row and col for a matrix of size sz.
 
-
-    % This will be used to store the column number that gives the best shift for the signals
+    % This will be used to store the column number that gives the best shift for the signals.
+    % shift and shiftAlt are arrays for storing the best alignment shift at each time index.
     shiftAlt = nan(nRows,1);
     shift = nan(nRows,1);
 
 
+    % Constructing the Shift Paths:
+    % The function iteratively follows each peak in SCORE (starting from the highest) to build a smooth alignment path. It does this by:
+    % Selecting the highest SCORE value (representing the best alignment shift) at each time point.
+    % Limiting the change in shift to +/-1 per time index, ensuring smoothness in alignment.
+    % This step constructs the main and alternative shift paths for alignment.
 
     %sort with largest peak first
     [peakVal , i] = sort(peakVal,'descend');
-    peakRow = peakRow(i);
-    peakCol = peakCol(i);
+    peakRow = peakRow(i); % Sort row in descending order of PeakVal. 
+    peakCol = peakCol(i); % Sort column in descending order of PeakVal. 
     
     if debug; nested_debug2(); end
 
-    while (~isempty(peakVal) && ~isnan(peakVal(1)))
+    while (~isempty(peakVal) && ~isnan(peakVal(1))) % while peakVal is not empty and the largest peak is not NAN:
         %take the largest peak that is still in the running
         r = peakRow(1);
         c = peakCol(1);
@@ -135,6 +142,8 @@ function [shift, shiftAlt, SCORE] = generatewarpshift(RXY, RXX, RYY, noiseLevel)
         if debug; nested_debug2(); end
     end
 
+    % Shift Adjustment: 
+    % After constructing shift and shiftAlt, the zero-lag center is adjusted by subtracting cMid, providing the final time shifts needed to align the signals.
     % a shift of cMid corresponds to zero ...
     shift = shift - cMid;
     shiftAlt = shiftAlt - cMid;
@@ -152,10 +161,11 @@ function [shift, shiftAlt, SCORE] = generatewarpshift(RXY, RXX, RYY, noiseLevel)
 %**************************************************************************
             
     function nested_followdownpeak(r,c,direction)
+    % This function iteratively follows a peak in SCORE, adjusting the shift in a way that ensures smooth transitions and removes bad peaks.
         cAtPeak = c;
         currentScore = SCORE(r,c);
         % we will check r,c which we don't need to, but makes code shorter
-        while ~isnan(currentScore)
+        while ~isnan(currentScore) % While current score is not NAN:
             cChoice = max(c-1,1):min(c+1,nCols); % we can only move one column along for each new row
             cScores = SCORE(r,cChoice);
             [cBestScore,iBest] = max(cScores);
@@ -177,6 +187,7 @@ function [shift, shiftAlt, SCORE] = generatewarpshift(RXY, RXX, RYY, noiseLevel)
     end
 
     function nested_removebadpeaks(r,c)
+    % This function deletes peaks that no longer qualify as local maxima due to new adjustments in SCORE.
         rowDiff = peakRow - r;
         colDiff = peakCol - c;
         
@@ -189,7 +200,8 @@ function [shift, shiftAlt, SCORE] = generatewarpshift(RXY, RXX, RYY, noiseLevel)
 %**************************************************************************
 % nested functions for debugging and visualisation
 %**************************************************************************
-    
+% nested_debug0, nested_debug1, and nested_debug2 are included to allow visual inspection of SCORE, peak positions, and shift paths during debugging.
+
     function nested_debug0()
         if isempty(hPScore)
             figure;
