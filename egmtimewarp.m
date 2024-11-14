@@ -6,6 +6,7 @@ function shift = egmtimewarp(eX,eY,sampleFreq, tWindowWidth, tMaxLag, noiseLevel
 %   FINESSEWARPSHIFT
 %
 % Author: Nick Linton (2020)
+% Added comments by Hiroki (2024)
 % Modifications - 
 
 
