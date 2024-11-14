@@ -20,9 +20,14 @@ function shift = egmtimewarp(eX,eY,sampleFreq, tWindowWidth, tMaxLag, noiseLevel
 % code
 % ---------------------------------------------------------------
 
-
-    [RXY, tShift, indShift, RXX, RYY ] = egmcorr(eX,eY,sampleFreq, tWindowWidth, tMaxLag);
+    % Calculate cross-correlation matrix between eX and eY using egmcorr.
+    [RXY, tShift, indShift, RXX, RYY ] = egmcorr(eX,eY,sampleFreq, tWindowWidth, tMaxLag); 
+    % Using generatewarpshift to generate:
+    % shiftBasic: Basic warping shift array that aligns eX with eY based on the best time-shifted correlations.
+    % shiftAlt: Alternative shifts, which may be used to explore multiple alignment solutions.
+    % SCORE: A quality score of the shifts based on cross-correlation peaks and noise level, indicating the reliability of each shift point.
     [shiftBasic, shiftAlt, SCORE] = generatewarpshift(RXY, RXX, RYY, noiseLevel);
+    % Refine shiftBasics using finessewarpshift.
     shift = finessewarpshift(shiftBasic);
 end
 
