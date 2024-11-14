@@ -30,7 +30,7 @@ This MATLAB function also calculates the cross-correlation between two intracard
 **tShift** : Time shifts for cross-correlation corresponding to lags in delta \[s\].
 
 # egmtimewarp.m
-This MATLAB function extends the functionality of egmcorr to not only calculate the time-shifted correlation between two intracardiac electrograms (eX and eY) but also to determine and refine a "warping" or time alignment between them to map eX <-> eY. **It does this by calling egmcorr, generatewarpshift, and finessewarpshift.** This is particularly useful for analyzing signals with non-uniform delays, as might occur in the variable timing of cardiac events.
+This MATLAB function extends the functionality of egmcorr to not only calculate the time-shifted correlation between two intracardiac electrograms (eX and eY) but also to determine and refine a "warping" or time alignment between them to map eX <-> eY. **It does this by calling *egmcorr*, *generatewarpshift*, and *finessewarpshift*.** This is particularly useful for analyzing signals with non-uniform delays, as might occur in the variable timing of cardiac events.
 
 **Inputs**: \
 **eX, eY** : Two elecrograms to be cross-correlated. \
