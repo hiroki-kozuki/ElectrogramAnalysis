@@ -27,42 +27,43 @@ function eInterp = warpegm(eX, eY, shiftXY, f)
 % ---------------------------------------------------------------
 
     % some basics
-    nE = numel(eX);
-    ind = (1:nE)';
+    nE = numel(eX); % Number of elements in eX
+    ind = (1:nE)'; % Indices for elements in eX
     f = f(:)';
     fOnes = ones(size(f));
     
-    % create Y mapped onto X
+    % create Y mapped onto X, i.e., map eY onto the time axis of eX using indYonX.
     % use iY = iX + shiftXY
     %   indYonX = ind  +  shiftXY;
     %   indYonX = local_clean(indYonX,nE);
     % eYonX = eY(indYonX);    
     
-    % create X mapped onto Y
+    % create X mapped onto Y, i.e., map eX onto the time axis of eY using indXonY.
     % This code is approximate because the delays correspond to eX not eY
     % but there is only a lag of one pixel during transients.
     %   indXonY = ind -  shiftXY;
     %   indXonY = local_clean(indXonY,nE);
     % eXonY = eX(indXonY);   
     
-    % create Y mapped onto F
+    % create Y mapped onto F using indYonF, which is the index of eY on a fractional index scale based on f.
     % use iY = iX + shiftXY*(1-f)
     indYonF = ind * fOnes  +  shiftXY * (1-f);
     indYonF = local_clean(indYonF,nE);
     eYonF = eY(indYonF);    
     
-    % create X mapped onto F
+    % create X mapped onto F using indXonF, which is the index of eX on a fractional index scale based on f.
     %  use iX = iY - shiftXY*f
     indXonF = ind - shiftXY * f;
     indXonF = local_clean(indXonF,nE);
     eXonF = eX(indXonF);  
     
     % now interpolate the magnitudes
-    eInterp = bsxfun(@times,eYonF,f) + bsxfun(@times,eXonF,(1-f));
+    eInterp = bsxfun(@times,eYonF,f) + bsxfun(@times,eXonF,(1-f)); % bsxfun(@times,eYonF,f) multiplies eYonF and f. 
 
 end
 
 function i = local_clean(i,nE)
+% Since fractional indices are calculated, round these indices to the nearest integer and ensures they fall within valid bounds of eX and eY.
     i = round(i);
     i(i<1)=1;
     i(i>nE)=nE;
