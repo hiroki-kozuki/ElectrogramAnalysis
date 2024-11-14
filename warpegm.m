@@ -12,6 +12,7 @@ function eInterp = warpegm(eX, eY, shiftXY, f)
 %   eInterp  - output
 %
 % Author: Nick Linton (2020)
+% Added comments by Hiroki (2024)
 % Modifications - 
 
 
