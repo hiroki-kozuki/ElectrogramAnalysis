@@ -26,6 +26,8 @@ This MATLAB code also calculates the cross-correlation between two intracardiac 
 **tMaxLag** : Maximum shift (lag) of eY w.r.t eX \[s\] for computing cross-correlation. 
 
 **Outputs**: \
-**R** : The cross-correlation matrix for different lags and time points.
+**R** : The cross-correlation matrix for different lags and time points.\
 **tShift** : Time shifts for cross-correlation corresponding to lags in delta \[s\].
+
+
 
