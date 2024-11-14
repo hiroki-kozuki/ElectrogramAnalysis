@@ -42,6 +42,9 @@ This MATLAB function refines the output from egmcorr by identifying optimal alig
 **shiftAlt** : Alternative alignment shift values \[s\].\
 **SCORE** : Refined score matrix that highlights optimal alignment paths.
 
+**Uses**:\
+egmcorr
+
 # finessewarpshift.m
 This MATLAB function processes a vector of shift values (shiftOld) generated in previous functions (e.g., generatewarpshift) and fills in missing values (NaN) using linear interpolation where no shift values were previously identified. This smoothens out and refines the shift sequence, ensuring continuity and gradual changes between consecutive points in time such that the maximum allowed gradient is +/- 1. 
 
@@ -50,6 +53,9 @@ This MATLAB function processes a vector of shift values (shiftOld) generated in 
 
 **Outputs**: \
 **shift** : Array (vector) containing smoothly interpolated shifts (wihout NaN values).
+
+**Uses**:\
+generatewarpshift
 
 # egmtimewarp.m
 This MATLAB function extends the functionality of egmcorr to not only calculate the time-shifted correlation between two intracardiac electrograms (eX and eY) but also to determine and refine a "warping" or time alignment between them to map eX <-> eY. **It does this by calling *egmcorr*, *generatewarpshift*, and *finessewarpshift*.** This is particularly useful for aligning signals with non-uniform delays, as might occur in the variable timing of cardiac events.
@@ -64,6 +70,9 @@ This MATLAB function extends the functionality of egmcorr to not only calculate 
 **Outputs**: \
 **shift** : A refined warping shift array indicating the time shifts required to align eX to eY at each time point.
 
+**Uses**:\
+finessewarpshift
+
 # warpegm.m
 This MATLAB function interpolates between two electrograms (eX and eY) and yields eX + f*(eY-eX) based on a time-warping shift vector shiftXY and a weighting factor f. It synthesizes an electrogram (eInterp) that aligns eX and eY in a non-linear fashin and combines them accounting for their time discrepancies as specified by shiftXY. This is useful for applications where signals may be temporally misaligned due to physiological or technical reasons, such as varying conduction speeds or sensor timing differences. The resulting eInterp represents an intermediate state between eX and eY in both time and amplitude.
 
@@ -75,8 +84,17 @@ This MATLAB function interpolates between two electrograms (eX and eY) and yield
 **Outputs**: \
 **eInterp** : Interpolated electrogram that combines eX and eY based on the shift and weighting factor f.
 
+# testegmwarpSCRIPT.m:
+This MATLAB code performs processing, alignment, and interpolation of EGMs. It uses time-warping, cross-correlation analysis, and shifts interpolation for accurate spatial and temporal alignment. This allows comparison and visualization of two EGMs (e1 and e2) from different recording locations, interpolating a new EGM (eInterp) between them.
+
+**Uses**:\
+egmcorr, interpegm
+
+# testegmwarp3dSCRIPT.m
+Simplified version of testegmwarpSCRIPT.m with only 4 grid points for electrodes. 
+
 # interpegm.m:
-This MATLAB code performs spatial interpolation of electrograms on a triangular mesh by incorporating time warping between neighboring points on the mesh. The interpegm function creates an interpolated electrogram (eInterp) at arbitrary spatial points (pNew) within a triangular mesh defined by tri. It considers time shifts (shift) between electrode recordings to achieve more accurate temporal alignment before performing the interpolation. The main interpegm function generates interpolated EGMs by calculating time shifts between EGMs along each triangle edge, mapping EGM signals onto new points by incorporating these shifts, and using barycentric interpolation to produce an accurate EGM signal at arbitrary points within the triangulated region. It provides spatially continuous EGM data by capturing both temporal and spatial variations, especially useful for visualizing and analyzing electrical activity in the heart with high spatial precision.
+This MATLAB code performs spatial interpolation of electrograms on a triangular mesh by incorporating time warping between neighboring points on the mesh. The interpegm function creates an interpolated electrogram (eInterp) at arbitrary spatial points (pNew) within a triangular mesh defined by tri. It considers time shifts (shift) between electrode recordings to achieve more accurate temporal alignment before performing the interpolation. The main interpegm function generates interpolated EGMs by calculating time shifts between EGMs along each triangle edge using ***egmtimewarp***, mapping EGM signals onto new points by incorporating these shifts, and using barycentric interpolation to produce an accurate EGM signal at arbitrary points within the triangulated region. It provides spatially continuous EGM data by capturing both temporal and spatial variations, especially useful for visualizing and analyzing electrical activity in the heart with high spatial precision.
 
 **Inputs**: \
 **pNew** : Coordinates of points where the interpolated electrogram is desired, i.e., coordinates of the electrodes. \
@@ -87,6 +105,18 @@ This MATLAB code performs spatial interpolation of electrograms on a triangular 
 
 **Outputs**: \
 **eInterp** : The interpolated electrogram at each of the specified points in pNew.
+
+**Uses**:\
+egmtimewarp, 
+
+# gridinterpSCRIPT.m:
+This script loads EGM data and generates an animated visualization of interpolated EGMs across a 2D electrode array. It combines spatial interpolation, Hilbert transforms, and temporal smoothing to create a dynamic 3D mesh, allowing detailed observation of the signal’s spatial and temporal evolution. The final output is saved as a video, providing a comprehensive view of the electrical activity distribution across the heart’s surface.
+
+**Uses**:\
+interpegm
+
+
+
 
 
 
