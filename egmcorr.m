@@ -97,7 +97,7 @@ function [RXY, tShift, indShift, RXX, RYY ] = egmcorr(eX,eY,sampleFreq, tWindowW
 % For each value of t above, we need eYw centred on t-d to t+d, ie t+delta(:)
 %**************************************************************************
 % eYwB is going to be an n*numel(w) array - eY 'windowed' and buffered. By buffering eY in this way, the function avoids recalculating windows of eY each time it shifts; \
-instead, it rotates through the buffer, reducing computation time.
+% instead, it rotates through the buffer, reducing computation time.
     nBuff = numel(indShift);
     eYwB = zeros(numel(w), nBuff); %B for buffer
     tFirst = k + 1;
